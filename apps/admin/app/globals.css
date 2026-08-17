@@ -1,0 +1,612 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-height: 100%;
+  background: #070611;
+}
+
+body {
+  min-height: 100%;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+  background: #070611;
+  color: #ffffff;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+.admin-page {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(
+      circle at 20% 10%,
+      rgba(113, 79, 255, 0.18),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 85% 90%,
+      rgba(255, 73, 184, 0.12),
+      transparent 35%
+    ),
+    #070611;
+}
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+.login-glow,
+.background-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.login-glow {
+  width: 420px;
+  height: 420px;
+  opacity: 0.18;
+}
+
+.login-glow.glow-one {
+  top: -220px;
+  left: -180px;
+  background: #6845ff;
+}
+
+.login-glow.glow-two {
+  right: -180px;
+  bottom: -220px;
+  background: #e04dbb;
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 470px;
+  padding: 45px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 30px;
+  background: rgba(19, 15, 40, 0.84);
+  box-shadow:
+    0 35px 100px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(25px);
+}
+
+.login-icon {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    #7655ff,
+    #ff55b9
+  );
+  box-shadow:
+    0 15px 35px rgba(117, 84, 255, 0.25);
+  font-size: 26px;
+}
+
+.login-label,
+.admin-label {
+  color: #a995ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.login-card h1 {
+  margin-top: 10px;
+  font-size: clamp(34px, 6vw, 48px);
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.login-card > p {
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login-form {
+  margin-top: 32px;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-form input {
+  width: 100%;
+  height: 56px;
+  padding: 0 17px;
+  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.login-form input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.login-form input:focus {
+  border-color: rgba(158, 130, 255, 0.7);
+  box-shadow:
+    0 0 0 4px rgba(143, 107, 255, 0.08);
+}
+
+.primary-button {
+  width: 100%;
+  height: 57px;
+  margin-top: 18px;
+  border-radius: 16px;
+  background: linear-gradient(
+    100deg,
+    #7655ff,
+    #bd5cff,
+    #ff55b9
+  );
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow:
+    0 14px 35px rgba(151, 85, 255, 0.22);
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+}
+
+.primary-button:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.primary-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error-box {
+  margin-top: 15px;
+  padding: 13px 15px;
+  border: 1px solid rgba(255, 100, 120, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 70, 100, 0.08);
+  color: #ff9da9;
+  font-size: 13px;
+}
+
+/* =========================
+   ADMIN PAGE
+========================= */
+
+.admin-page {
+  min-height: 100vh;
+  padding: 50px 5vw 100px;
+}
+
+.admin-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.background-glow {
+  width: 500px;
+  height: 500px;
+  opacity: 0.12;
+}
+
+.background-glow.glow-one {
+  top: -250px;
+  left: -200px;
+  background: #6545ff;
+}
+
+.background-glow.glow-two {
+  right: -250px;
+  bottom: -250px;
+  background: #d84bb8;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.admin-header,
+.stats,
+.wishes-section {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-header h1 {
+  margin-top: 8px;
+  font-size: clamp(38px, 6vw, 62px);
+  line-height: 0.95;
+  letter-spacing: -3px;
+}
+
+.admin-header p {
+  margin-top: 15px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+.logout-button {
+  padding: 11px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: white;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  margin-top: 45px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 23px 25px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(15px);
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: rgba(125, 91, 255, 0.13);
+  color: #b19bff;
+  font-size: 23px;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.stat-label {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 12px;
+}
+
+.clear-button {
+  min-width: 190px;
+  padding: 0 24px;
+  border-radius: 20px;
+  background: rgba(255, 65, 100, 0.08);
+  border: 1px solid rgba(255, 85, 110, 0.15);
+  color: #ff9da9;
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.clear-button:hover:not(:disabled) {
+  background: rgba(255, 65, 100, 0.13);
+  transform: translateY(-1px);
+}
+
+.clear-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.clear-icon {
+  margin-right: 8px;
+}
+
+/* =========================
+   SECTION
+========================= */
+
+.wishes-section {
+  margin-top: 55px;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+
+.section-header p {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+}
+
+.refresh-button {
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.refresh-button:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+
+/* =========================
+   WISHES
+========================= */
+
+.wishes-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-wish {
+  position: relative;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 19px;
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(15px);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.admin-wish:hover {
+  border-color: rgba(166, 143, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wish-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.wish-avatar {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: linear-gradient(
+    135deg,
+    rgba(121, 87, 255, 0.5),
+    rgba(255, 77, 185, 0.35)
+  );
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.wish-info h3 {
+  font-size: 15px;
+}
+
+.wish-info span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 10px;
+}
+
+.wish-index {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+}
+
+.admin-wish-text {
+  margin-top: 18px;
+  padding-right: 110px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.delete-button {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 85, 110, 0.12);
+  border-radius: 9px;
+  background: rgba(255, 65, 100, 0.06);
+  color: rgba(255, 140, 155, 0.8);
+  cursor: pointer;
+  font-size: 11px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.delete-button:hover:not(:disabled) {
+  background: rgba(255, 65, 100, 0.12);
+  color: #ff9da9;
+}
+
+.delete-button:disabled {
+  opacity: 0.35;
+  cursor: wait;
+}
+
+/* =========================
+   EMPTY
+========================= */
+
+.empty-state {
+  padding: 80px 20px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.empty-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(125, 91, 255, 0.08);
+  color: rgba(177, 155, 255, 0.7);
+  font-size: 27px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+}
+
+.empty-state p {
+  max-width: 400px;
+  margin: 10px auto 0;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.admin-error {
+  position: relative;
+  z-index: 3;
+  max-width: 1200px;
+  margin: 18px auto 0;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+  .admin-page {
+    padding: 30px 16px 60px;
+  }
+
+  .login-card {
+    padding: 32px 23px;
+    border-radius: 24px;
+  }
+
+  .admin-header h1 {
+    font-size: 43px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .clear-button {
+    min-height: 60px;
+  }
+
+  .section-header {
+    align-items: center;
+  }
+
+  .section-header p {
+    display: none;
+  }
+
+  .admin-wish {
+    padding: 18px;
+  }
+
+  .admin-wish-text {
+    padding-right: 0;
+    padding-bottom: 35px;
+  }
+
+  .delete-button {
+    right: 18px;
+    bottom: 17px;
+  }
+}

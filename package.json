@@ -1,0 +1,22 @@
+{
+  "name": "wishes-project",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "npm@11.5.2",
+  "workspaces": [
+    "apps/*",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=wish\" \"npm run dev --workspace=screen\" \"npm run dev --workspace=admin\" \"npm run dev --workspace=server\"",
+    "dev:wish": "npm run dev --workspace=wish",
+    "dev:screen": "npm run dev --workspace=screen",
+    "dev:admin": "npm run dev --workspace=admin",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspaces",
+    "start": "npm run start --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
