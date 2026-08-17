@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL ||
-  "http://localhost:3002";
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3002";
 
 const ANIMATION_INTERVAL = 900;
 
@@ -42,70 +37,53 @@ function createBackgroundStars(): BackgroundStar[] {
 
 export default function ScreenPage() {
   const [wishes, setWishes] = useState<Wish[]>([]);
-  const [connected, setConnected] =
-    useState(false);
+  const [connected, setConnected] = useState(false);
 
-  const [visibleWishes, setVisibleWishes] =
-    useState<Set<string>>(
-      () => new Set(),
-    );
+  const [visibleWishes, setVisibleWishes] = useState<Set<string>>(
+    () => new Set(),
+  );
 
-  const [backgroundStars] =
-    useState<BackgroundStar[]>(() =>
-      createBackgroundStars(),
-    );
+  const [backgroundStars] = useState<BackgroundStar[]>(() =>
+    createBackgroundStars(),
+  );
 
   /*
-   * Ссылки на карточки.
+   * =========================================================
+   * REFS
+   * =========================================================
    */
-  const wishRefs = useRef<
-    Map<string, HTMLElement>
-  >(new Map());
 
-  /*
-   * Intersection Observer.
-   */
-  const observerRef =
-    useRef<IntersectionObserver | null>(
-      null,
-    );
+  const wishRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  /*
-   * Очередь анимации.
-   */
-  const animationQueueRef =
-    useRef<string[]>([]);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  /*
-   * Пожелания, которые уже попали
-   * в очередь.
-   */
-  const queuedWishesRef =
-    useRef<Set<string>>(new Set());
+  const animationQueueRef = useRef<string[]>([]);
 
-  /*
-   * Идёт ли сейчас анимация.
-   */
-  const isAnimatingRef =
-    useRef(false);
+  const queuedWishesRef = useRef<Set<string>>(new Set());
 
-  /*
-   * Таймер очереди.
-   */
+  const isAnimatingRef = useRef(false);
+
   const animationTimerRef =
-    useRef<ReturnType<
-      typeof setTimeout
-    > | null>(null);
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /*
-   * =========================
-   * УДАЛЕНИЕ ИЗ ОЧЕРЕДИ
-   * =========================
+   * Храним актуальные данные в refs.
+   *
+   * Это важно:
+   * IntersectionObserver создаётся один раз и не должен
+   * пересоздаваться при каждом setState.
    */
 
-  const removeFromAnimationQueue = (
-    id: string,
-  ) => {
+  const wishesRef = useRef<Wish[]>([]);
+  const visibleWishesRef = useRef<Set<string>>(new Set());
+
+  /*
+   * =========================================================
+   * УДАЛЕНИЕ ИЗ ОЧЕРЕДИ
+   * =========================================================
+   */
+
+  const removeFromAnimationQueue = (id: string) => {
     animationQueueRef.current =
       animationQueueRef.current.filter(
         (wishId) => wishId !== id,
@@ -115,19 +93,25 @@ export default function ScreenPage() {
   };
 
   /*
-   * =========================
+   * =========================================================
    * СЛЕДУЮЩАЯ АНИМАЦИЯ
-   * =========================
+   * =========================================================
    */
 
   const processNextWish = () => {
+    /*
+     * Если сейчас уже идёт анимация,
+     * ничего не делаем.
+     */
+
     if (isAnimatingRef.current) {
       return;
     }
 
     /*
-     * Берём следующее пожелание.
+     * Берём следующее пожелание из очереди.
      */
+
     const nextId =
       animationQueueRef.current.shift();
 
@@ -136,34 +120,39 @@ export default function ScreenPage() {
     }
 
     /*
-     * Проверяем, существует ли оно ещё.
+     * Проверяем, существует ли пожелание ещё.
      *
-     * Это важно, если администратор
-     * удалил его, пока оно ждало очереди.
+     * Оно могло быть удалено администратором,
+     * пока ожидало своей очереди.
      */
+
     const stillExists =
-      wishes.some(
+      wishesRef.current.some(
         (wish) => wish.id === nextId,
       );
 
     if (!stillExists) {
-      queuedWishesRef.current.delete(
-        nextId,
-      );
+      queuedWishesRef.current.delete(nextId);
+
+      /*
+       * Переходим сразу к следующему.
+       */
 
       processNextWish();
 
       return;
     }
 
+    /*
+     * Запускаем анимацию.
+     */
+
     isAnimatingRef.current = true;
 
-    /*
-     * Запускаем анимацию только
-     * этого пожелания.
-     */
     setVisibleWishes((current) => {
       if (current.has(nextId)) {
+        visibleWishesRef.current = current;
+
         return current;
       }
 
@@ -171,48 +160,54 @@ export default function ScreenPage() {
 
       next.add(nextId);
 
+      visibleWishesRef.current = next;
+
       return next;
     });
 
     /*
-     * После 900 мс запускаем следующее.
+     * Через 900 мс запускаем следующую карточку.
      */
-    animationTimerRef.current =
-      setTimeout(() => {
-        isAnimatingRef.current = false;
 
-        queuedWishesRef.current.delete(
-          nextId,
-        );
+    animationTimerRef.current = setTimeout(() => {
+      isAnimatingRef.current = false;
 
-        processNextWish();
-      }, ANIMATION_INTERVAL);
+      queuedWishesRef.current.delete(nextId);
+
+      animationTimerRef.current = null;
+
+      processNextWish();
+    }, ANIMATION_INTERVAL);
   };
 
   /*
-   * =========================
+   * =========================================================
    * ДОБАВЛЕНИЕ В ОЧЕРЕДЬ
-   * =========================
+   * =========================================================
    */
 
-  const addToAnimationQueue = (
-    id: string,
-  ) => {
-    if (
-      queuedWishesRef.current.has(id)
-    ) {
-      return;
-    }
+  const addToAnimationQueue = (id: string) => {
+    /*
+     * Уже в очереди?
+     */
 
-    if (visibleWishes.has(id)) {
+    if (queuedWishesRef.current.has(id)) {
       return;
     }
 
     /*
-     * Проверяем, что пожелание
-     * действительно существует.
+     * Уже показано?
      */
-    const exists = wishes.some(
+
+    if (visibleWishesRef.current.has(id)) {
+      return;
+    }
+
+    /*
+     * Проверяем существование пожелания.
+     */
+
+    const exists = wishesRef.current.some(
       (wish) => wish.id === id,
     );
 
@@ -220,52 +215,62 @@ export default function ScreenPage() {
       return;
     }
 
+    /*
+     * Добавляем в очередь.
+     */
+
     queuedWishesRef.current.add(id);
 
     animationQueueRef.current.push(id);
+
+    /*
+     * Запускаем обработку.
+     */
 
     processNextWish();
   };
 
   /*
-   * =========================
+   * =========================================================
    * INTERSECTION OBSERVER
-   * =========================
+   * =========================================================
+   *
+   * ВАЖНО:
+   * Observer создаётся ТОЛЬКО ОДИН РАЗ.
+   *
+   * Раньше он пересоздавался при каждом изменении wishes /
+   * visibleWishes, из-за чего уничтожался таймер очереди.
    */
 
   useEffect(() => {
-    observerRef.current =
+    const observer =
       new IntersectionObserver(
         (entries) => {
-          entries.forEach(
-            (entry) => {
-              if (
-                !entry.isIntersecting
-              ) {
-                return;
-              }
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              return;
+            }
 
-              const id =
-                entry.target.getAttribute(
-                  "data-wish-id",
-                );
-
-              if (!id) {
-                return;
-              }
-
-              addToAnimationQueue(id);
-
-              /*
-               * После попадания в очередь
-               * больше не наблюдаем за этой
-               * карточкой.
-               */
-              observerRef.current?.unobserve(
-                entry.target,
+            const id =
+              entry.target.getAttribute(
+                "data-wish-id",
               );
-            },
-          );
+
+            if (!id) {
+              return;
+            }
+
+            addToAnimationQueue(id);
+
+            /*
+             * После попадания в очередь
+             * больше не наблюдаем эту карточку.
+             */
+
+            observer.unobserve(
+              entry.target,
+            );
+          });
         },
         {
           threshold: 0.15,
@@ -274,23 +279,40 @@ export default function ScreenPage() {
         },
       );
 
-    return () => {
-      observerRef.current?.disconnect();
+    observerRef.current = observer;
 
-      if (
-        animationTimerRef.current
-      ) {
+    /*
+     * Cleanup только при размонтировании страницы.
+     */
+
+    return () => {
+      observer.disconnect();
+
+      observerRef.current = null;
+
+      if (animationTimerRef.current) {
         clearTimeout(
           animationTimerRef.current,
         );
+
+        animationTimerRef.current = null;
       }
+
+      animationQueueRef.current = [];
+
+      queuedWishesRef.current.clear();
+
+      isAnimatingRef.current = false;
     };
-  }, [wishes, visibleWishes]);
+  }, []);
 
   /*
-   * =========================
-   * НАБЛЮДЕНИЕ ЗА НОВЫМИ
-   * =========================
+   * =========================================================
+   * НАБЛЮДЕНИЕ ЗА КАРТОЧКАМИ
+   * =========================================================
+   *
+   * Когда список пожеланий изменился,
+   * подключаем новые DOM-элементы к observer.
    */
 
   useEffect(() => {
@@ -302,22 +324,13 @@ export default function ScreenPage() {
     }
 
     wishRefs.current.forEach(
-      (element) => {
+      (element, id) => {
         if (!element) {
           return;
         }
 
-        const id =
-          element.getAttribute(
-            "data-wish-id",
-          );
-
-        if (!id) {
-          return;
-        }
-
         if (
-          visibleWishes.has(id) ||
+          visibleWishesRef.current.has(id) ||
           queuedWishesRef.current.has(id)
         ) {
           return;
@@ -326,15 +339,12 @@ export default function ScreenPage() {
         observer.observe(element);
       },
     );
-  }, [
-    wishes,
-    visibleWishes,
-  ]);
+  }, [wishes]);
 
   /*
-   * =========================
-   * ПОДКЛЮЧЕНИЕ К СЕРВЕРУ
-   * =========================
+   * =========================================================
+   * ПОДКЛЮЧЕНИЕ К SERVER / SOCKET.IO
+   * =========================================================
    */
 
   useEffect(() => {
@@ -349,8 +359,9 @@ export default function ScreenPage() {
     );
 
     /*
-     * Подключение.
+     * CONNECT
      */
+
     socket.on("connect", () => {
       console.log(
         "🟢 Connected to wishes server",
@@ -360,8 +371,9 @@ export default function ScreenPage() {
     });
 
     /*
-     * Отключение.
+     * DISCONNECT
      */
+
     socket.on("disconnect", () => {
       console.log(
         "🔴 Disconnected from wishes server",
@@ -371,9 +383,9 @@ export default function ScreenPage() {
     });
 
     /*
-     * =========================
-     * СТАРЫЕ ПОЖЕЛАНИЯ
-     * =========================
+     * =======================================================
+     * INITIAL WISHES
+     * =======================================================
      */
 
     socket.on(
@@ -384,29 +396,54 @@ export default function ScreenPage() {
           initialWishes,
         );
 
+        /*
+         * Обновляем refs.
+         */
+
+        wishesRef.current =
+          initialWishes;
+
+        /*
+         * Обновляем React state.
+         */
+
         setWishes(initialWishes);
 
         /*
-         * На перезагрузке экрана
-         * очищаем старую очередь.
+         * Полностью сбрасываем очередь.
          */
+
         animationQueueRef.current = [];
 
         queuedWishesRef.current.clear();
+
+        visibleWishesRef.current =
+          new Set();
 
         setVisibleWishes(
           new Set(),
         );
 
-        isAnimatingRef.current =
-          false;
+        /*
+         * Останавливаем текущую анимацию.
+         */
+
+        isAnimatingRef.current = false;
+
+        if (animationTimerRef.current) {
+          clearTimeout(
+            animationTimerRef.current,
+          );
+
+          animationTimerRef.current = null;
+        }
       },
     );
 
     /*
-     * =========================
+     * =======================================================
      * НОВОЕ ПОЖЕЛАНИЕ
-     * =========================
+     * =======================================================
      */
 
     socket.on(
@@ -417,17 +454,35 @@ export default function ScreenPage() {
           wish,
         );
 
+        /*
+         * Добавляем в актуальный ref.
+         */
+
+        wishesRef.current = [
+          ...wishesRef.current,
+          wish,
+        ];
+
+        /*
+         * Добавляем в React state.
+         */
+
         setWishes((current) => [
           ...current,
           wish,
         ]);
+
+        /*
+         * Карточка будет автоматически
+         * зарегистрирована observer после render.
+         */
       },
     );
 
     /*
-     * =========================
-     * УДАЛЕНИЕ ОДНОГО
-     * =========================
+     * =======================================================
+     * УДАЛЕНИЕ ОДНОГО ПОЖЕЛАНИЯ
+     * =======================================================
      */
 
     socket.on(
@@ -439,8 +494,19 @@ export default function ScreenPage() {
         );
 
         /*
+         * Удаляем из актуального ref.
+         */
+
+        wishesRef.current =
+          wishesRef.current.filter(
+            (wish) =>
+              wish.id !== deletedId,
+          );
+
+        /*
          * Убираем из списка.
          */
+
         setWishes((current) =>
           current.filter(
             (wish) =>
@@ -451,36 +517,36 @@ export default function ScreenPage() {
         /*
          * Убираем из очереди.
          */
+
         removeFromAnimationQueue(
           deletedId,
         );
 
         /*
-         * Убираем из уже показанных.
+         * Убираем из отображённых.
          */
-        setVisibleWishes(
-          (current) => {
-            if (
-              !current.has(
-                deletedId,
-              )
-            ) {
-              return current;
-            }
 
-            const next = new Set(
-              current,
-            );
+        if (
+          visibleWishesRef.current.has(
+            deletedId,
+          )
+        ) {
+          const next = new Set(
+            visibleWishesRef.current,
+          );
 
-            next.delete(deletedId);
+          next.delete(deletedId);
 
-            return next;
-          },
-        );
+          visibleWishesRef.current =
+            next;
+
+          setVisibleWishes(next);
+        }
 
         /*
-         * Удаляем ссылку.
+         * Удаляем DOM reference.
          */
+
         wishRefs.current.delete(
           deletedId,
         );
@@ -488,9 +554,9 @@ export default function ScreenPage() {
     );
 
     /*
-     * =========================
+     * =======================================================
      * ОЧИСТКА ВСЕХ
-     * =========================
+     * =======================================================
      */
 
     socket.on(
@@ -501,50 +567,57 @@ export default function ScreenPage() {
         );
 
         /*
-         * Очищаем пожелания.
+         * Очищаем refs.
          */
+
+        wishesRef.current = [];
+
+        visibleWishesRef.current =
+          new Set();
+
+        /*
+         * Очищаем state.
+         */
+
         setWishes([]);
 
-        /*
-         * Очищаем анимационную очередь.
-         */
-        animationQueueRef.current = [];
-
-        queuedWishesRef.current.clear();
-
-        /*
-         * Очищаем отображённые.
-         */
         setVisibleWishes(
           new Set(),
         );
 
         /*
-         * Останавливаем текущую очередь.
+         * Очищаем очередь.
          */
-        isAnimatingRef.current =
-          false;
+
+        animationQueueRef.current = [];
+
+        queuedWishesRef.current.clear();
 
         /*
-         * Удаляем таймер.
+         * Останавливаем анимацию.
          */
-        if (
-          animationTimerRef.current
-        ) {
+
+        isAnimatingRef.current = false;
+
+        if (animationTimerRef.current) {
           clearTimeout(
             animationTimerRef.current,
           );
 
-          animationTimerRef.current =
-            null;
+          animationTimerRef.current = null;
         }
 
         /*
-         * Очищаем ссылки.
+         * Очищаем ссылки на DOM.
          */
+
         wishRefs.current.clear();
       },
     );
+
+    /*
+     * CLEANUP SOCKET
+     */
 
     return () => {
       socket.disconnect();
@@ -552,9 +625,9 @@ export default function ScreenPage() {
   }, []);
 
   /*
-   * =========================
-   * REF
-   * =========================
+   * =========================================================
+   * REF ДЛЯ КАРТОЧКИ
+   * =========================================================
    */
 
   const setWishRef = (
@@ -567,8 +640,16 @@ export default function ScreenPage() {
         element,
       );
 
+      /*
+       * Если карточка ещё не показана
+       * и не находится в очереди —
+       * начинаем наблюдать.
+       */
+
       if (
-        !visibleWishes.has(id) &&
+        !visibleWishesRef.current.has(
+          id,
+        ) &&
         !queuedWishesRef.current.has(
           id,
         )
@@ -583,9 +664,9 @@ export default function ScreenPage() {
   };
 
   /*
-   * =========================
+   * =========================================================
    * RENDER
-   * =========================
+   * =========================================================
    */
 
   return (
