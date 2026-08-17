@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 
 const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3002";
+  process.env.NEXT_PUBLIC_SERVER_URL || "https://wishes-server.onrender.com";
 
 export default function WishPage() {
   const [name, setName] = useState("");
